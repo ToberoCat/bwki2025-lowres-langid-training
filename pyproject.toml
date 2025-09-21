@@ -1,0 +1,6 @@
+[project]
+name = "bwki2025-lowres-langid-training"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = []
