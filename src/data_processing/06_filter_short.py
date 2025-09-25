@@ -7,7 +7,7 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 from tqdm import tqdm
-from bwki2025.data_processing.fasttext_pipeline.text_utils import is_short
+from src.text_utils import is_short
 
 def process_file(file_path, output_dir, text_col, short_word_threshold, short_char_threshold, chunk_rows):
     pf = pq.ParquetFile(file_path)

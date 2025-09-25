@@ -6,7 +6,7 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 from tqdm import tqdm
-from .snippets import word_snippets, char_snippets
+from src.snippets import word_snippets, char_snippets
 
 def process_file(file_path, subset, output_dir, args):
     pf = pq.ParquetFile(file_path)

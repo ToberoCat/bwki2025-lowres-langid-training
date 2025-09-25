@@ -2,27 +2,49 @@
 import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+import re
 
 import pyarrow.parquet as pq
 from tqdm import tqdm
 
-from .writers import write_fasttext
+from src.writers import write_fasttext
 
+SPLIT_RE = {
+    "train": re.compile(r"(?:^|/)(train)(?:/|$)", re.IGNORECASE),
+    "valid": re.compile(r"(?:^|/)(valid|validation|val)(?:/|$)", re.IGNORECASE),
+    "test":  re.compile(r"(?:^|/)(test|eval)(?:/|$)", re.IGNORECASE),
+}
+
+def detect_subset(p: Path) -> str:
+    s = f"/{p.as_posix().lower()}/"
+    for name, rgx in SPLIT_RE.items():
+        if rgx.search(s):
+            return name
+    return "train"  # sensible default
 
 def process_file(file_path: Path, output_dir: Path, args) -> None:
-    pf = pq.ParquetFile(file_path)
-    subset = "train" if "train" in file_path.stem else ("valid" if "valid" in file_path.stem else "test")
+    subset = detect_subset(file_path)
     out_file = output_dir / subset / f"{file_path.stem}.txt"
-    ## Just to clear the file the first time and the file is clear
-    with out_file.open("w") as fp:
-        pass
-
     out_file.parent.mkdir(parents=True, exist_ok=True)
-    for batch in pf.iter_batches(batch_size=args.chunk_rows):
+
+    # Truncate file once per source parquet
+    out_file.write_text("", encoding="utf-8")
+
+    pf = pq.ParquetFile(file_path)
+
+    # Only pull needed columns if present
+    needed = [args.label_col, args.text_col]
+    if args.region_col:
+        needed.append(args.region_col)
+
+    for batch in pf.iter_batches(batch_size=args.chunk_rows, columns=needed):
         df = batch.to_pandas()
         if not df.empty:
-            write_fasttext(out_file, df, args.label_col, args.text_col, args.region_col)
-
+            write_fasttext(
+                out_file, df,
+                args.label_col, args.text_col,
+                args.region_col
+            )
 
 def main():
     parser = argparse.ArgumentParser()
@@ -37,16 +59,26 @@ def main():
 
     input_dir = Path(args.input_dir)
     output_dir = Path(args.output_dir)
+
+    # Create output split dirs
     for subset in ["train", "valid", "test"]:
         (output_dir / subset).mkdir(parents=True, exist_ok=True)
 
-        futures = []
-        with ThreadPoolExecutor(max_workers=args.workers) as ex:
-            for file_path in (input_dir / subset).glob("*.parquet"):
-                futures.append(ex.submit(process_file, file_path, output_dir, args))
-            for _ in tqdm(as_completed(futures), total=len(futures), desc="Writing FastText files"):
-                pass
+    # Find all parquet files recursively
+    files = sorted(input_dir.rglob("*.parquet"))
+    if not files:
+        raise SystemExit(f"No parquet files found under {input_dir}. "
+                         f"Check your path/split names (train/valid|validation/test).")
 
+    with ThreadPoolExecutor(max_workers=args.workers) as ex:
+        futures = {ex.submit(process_file, p, output_dir, args): p for p in files}
+        for fut in tqdm(as_completed(futures), total=len(futures), desc="Writing FastText files"):
+            # Surface exceptions instead of silently ignoring them
+            try:
+                fut.result()
+            except Exception as e:
+                src = futures[fut]
+                raise RuntimeError(f"Failed on {src}") from e
 
 if __name__ == "__main__":
     main()

@@ -5,7 +5,7 @@ import math
 import polars as pl
 from tqdm import tqdm
 import ray
-from bwki2025.data_processing.fasttext_pipeline.text_utils import near_deduplicate
+from src.text_utils import near_deduplicate
 
 ray.init(
     ignore_reinit_error=True,
