@@ -23,7 +23,9 @@ uv run tools/download_dataset.py
 * Use `--small` for a smaller test dataset, around 500MB in size (`uv run tools/download_dataset.py --small`)
 * If the download was interrupted or you want to switch between `--small` and full mode, **delete the entire `artifacts/` folder first**.
 
-## 🛠️ Prepare the Dataset
+## Local
+
+### 🛠️ Prepare the Dataset
 
 Clean, split, and prepare the data:
 
@@ -34,7 +36,7 @@ uv run create_dataset_fasttext.py
 * This will create the processed dataset under `artifacts/splitParquet/`.
 * **Note:** Running again requires deleting the `artifacts/` folder, as files are not overwritten.
 
-## 🧑‍🏫 Train the Model
+##ä 🧑‍🏫 Train the Model
 
 > ⏱️ Training is heavy. On the full dataset, 5 demo epochs take **\~0.5 day**; full runs take several days depending on hardware.
 
@@ -64,7 +66,7 @@ data/fasttext_experts/
 ```
 
 
-## 🐳 Run Everything in Docker
+## 🐳 Run Everything in Docker (recommended)
 
 > ⏱️ Training is heavy. On the full dataset, 5 demo epochs take **\~0.5 day**; full runs take several days depending on hardware.
 
@@ -76,10 +78,10 @@ docker compose up
 
 The container will:
 
-1. Download the dataset (`artifacts/`).
-2. Prepare the dataset (`artifacts/splitParquet/`).
-3. Train the model (`data/fasttext_experts/`).
+1. Prepare the dataset (`artifacts/splitParquet/`).
+2. Train the model (`data/fasttext_experts/`).
 
+You have to download the dataset with the previous command.
 
 ## 🚀 Using the Models
 

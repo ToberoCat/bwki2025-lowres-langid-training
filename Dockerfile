@@ -24,12 +24,6 @@ COPY pyproject.toml /app/
 COPY train.py /app/
 COPY uv.lock/ /app/
 COPY tools/ /app/tools/
+COPY fetch-build-train.sh fetch-build-train.sh
 
 RUN uv sync
-
-#  docker run --cpus="16" --memory="15g" \
-  #  -v $(pwd)/src/bwki2025/data_processing/fasttext_pipeline:/app/src/bwki2025/data_processing/fasttext_pipeline \
-  #  -v $(pwd)/create_dataset_fasttext.py:/app/create_dataset_fasttext.py \
-  #  bwki2025_test_container \
-  #  uv run create_dataset_fasttext.py
-  # zum Runnen der docker file

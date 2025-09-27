@@ -12,7 +12,7 @@ services:
     environment:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
-    command: [ "uv", "run", "create_dataset_fasttext.py" ]
+    command: [ "bash", "fetch-build-train.sh" ]
 
 volumes:
   artifacts:
